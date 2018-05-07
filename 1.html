@@ -9,15 +9,13 @@
 </head>
 
 <body>
-
+    <div id="app">
+        <p>{{a}}</p>
+    </div>
 </body>
 <script>
-    var obj = {
-        a: [1, [[]]],
-        b: '1',
-        c: {
-            age: '1'
-        }
+    var data = {
+        a: 11111,
     }
 
     function Observer(obj) {
@@ -33,10 +31,11 @@
                 if (IsObjectOrArray(val) === undefined) {
                     Object.defineProperty(obj, key, {
                         get: function () {
-                            alert(1)
                             return val;
                         },
                         set: function (value) {
+                            alert(1)
+                            console.log(key);
                         }
                     })
                 }
@@ -69,7 +68,7 @@
         // 别忘了这个空数组的属性上定义了我们封装好的push等方法
         params.__proto__ = arrayAugmentations;
 
-        //如数组的一项也为数组 则递归
+        //若数组的一项也为数组 则递归
         for (const item of params) {
             if ((IsObjectOrArray(item) === 'Array')) {
                 ObserverArray(item)
@@ -79,9 +78,66 @@
     }
 
 
-    Observer(obj)
+    class Compile {
+        constructor(el, value) {
+            const ELEMENT = 1
+            const ATTR = 2
+            const TEXT = 3
+            this.$val = value;
+            this.$el = el.nodeType === ELEMENT ? el : document.querySelector(el);
+            if (this.$el) {
+                this.compileElement(this.$el);
+            }
+        }
 
+        compileElement(el) {
+            const ELEMENT = 1
+            const ATTR = 2
+            const TEXT = 3
 
+            let self = this;
+            let childNodes = el.childNodes;
+            [].slice.call(childNodes).forEach(node => {
+                let text = node.textContent;
+                let reg = /\{\{((?:.|\n)+?)\}\}/;
+                // 如果是element节点
+                if (node.nodeType === ELEMENT) {
+                    self.compile(node);
+                }
+                // 如果是text节点
+                else if (node.nodeType === TEXT && reg.test(text)) {
+                    // 匹配第一个选项
+                    self.compileText(node, RegExp.$1.trim());
+                }
+                // 解析子节点包含的指令
+                if (node.childNodes && node.childNodes.length) {
+                    self.compileElement(node);
+                }
+            })
+        }
+        compile(node) {
+            let nodeAttrs = node.attributes;
+            let self = this;
+
+            [].slice.call(nodeAttrs).forEach(attr => {
+                var attrName = attr.name;
+                if (self.isDirective(attrName)) {
+                    var exp = attr.value;
+                    node.innerHTML = typeof this.$val[exp] === 'undefined' ? '' : this.$val[exp];
+                    node.removeAttribute(attrName);
+                }
+            });
+        }
+        compileText(node, exp) {
+            node.textContent = typeof this.$val[exp] === 'undefined' ? '' : this.$val[exp];
+        }
+        isDirective(attr) {
+            return attr.indexOf('x-') === 0;
+        }
+    }
+
+    new Compile('#app', data)
+    Observer(data)
 
 
 </script>
