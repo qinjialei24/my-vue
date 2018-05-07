@@ -1,12 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
 </head>
+
 <body>
-        
+
 </body>
+<script>
+    var obj = {
+        a: [1, 2],
+        b: '1',
+        c: {
+            age: '1'
+        }
+    }
+
+    function Observer(obj) {
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const val = obj[key];
+                if (IsObjectOrArray(val) === 'Array') {
+
+                    ObserverArray(val)
+                }
+
+                if (IsObjectOrArray(val) === 'Object') {
+                    Observer(val)
+                }
+                if (IsObjectOrArray(val) === undefined) {
+                    Object.defineProperty(obj, key, {
+                        get: function () {
+                            alert(1)
+                            return val;
+                        },
+                        set: function (value) {
+                        }
+                    })
+                }
+            }
+        }
+    }
+
+    function IsObjectOrArray(params) {
+        if (Object.prototype.toString.call(params) === '[object Array]') {
+            return 'Array'
+        }
+        if (Object.prototype.toString.call(params) === '[object Object]') {
+            return 'Object'
+        }
+    }
+    //监听数组改变
+    function ObserverArray(params) {
+        const aryMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
+        const arrayAugmentations = [];
+
+        aryMethods.forEach((method) => {
+            let original = Array.prototype[method];
+            arrayAugmentations[method] = function () {
+                console.log('我被改变啦!');
+                return original.apply(this, arguments);
+            };
+        });
+        // 将我们要监听的数组的原型指针指向上面定义的空数组对象
+        // 别忘了这个空数组的属性上定义了我们封装好的push等方法
+        params.__proto__ = arrayAugmentations;
+
+    }
+
+
+    Observer(obj)
+
+
+
+
+</script>
+
 </html>
