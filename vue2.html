@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <form>
+            <input type="text" v-model="number">
+            <button type="button" v-click="increment">增加</button>
+        </form>
+        <h3 v-bind="number"></h3>
+
+        <form>
+            <input type="text" v-model="count">
+            <button type="button" v-click="incre">增加</button>
+        </form>
+        <h3 v-bind="count"></h3>
+
+
+        <h3 v-bind="demo"></h3>
+
+        <div v-click="test">点击</div>
+
+    </div>
+</body>
+<script>
+    class Vue {
+
+        constructor(options) {
+            this._init(options)
+        }
+
+        _init(options) {
+            this.$el = document.querySelector(options.el)
+            this.$data = options.data
+            this.$methods = options.methods
+            this._binding = {};
+
+            this._observe(this.$data)
+            this._complie(this.$el)
+        }
+        _observe(obj) {
+            let arr = Object.keys(obj)
+            for (const key of arr) {
+                this._binding[key] = {
+                    _directives: []
+                };
+                let value = obj[key]
+                // 先只考虑object 不考虑数组
+                typeof value === 'object' ? this._observe(value) : ''
+                let binding = this._binding[key];
+
+                Object.defineProperty(this.$data, key, {
+                    enumerable: true,
+                    configurable: true,
+                    get: function () {
+                        return value
+                    },
+                    set: function (newValue) {
+                        if (newValue !== value) {
+                            value = newValue
+                            binding._directives.forEach(function (item) {
+                                item.update();
+                            })
+                        }
+                    }
+                })
+            }
+        }
+        _complie(root) {
+            let nodes = root.children
+            for (const node of nodes) {
+                if (node.children.length) {
+                    this._complie(node)
+                }
+                else if (node.hasAttribute('v-click')) {
+                    node.onclick = (() => {
+                        var method = node.getAttribute('v-click')
+                        return this.$methods[method].bind(this.$data)
+                    })()
+                }
+                else if (node.hasAttribute('v-model') && (node.tagName === 'INPUT' || node.tagName == 'TEXTAREA')) {
+                    node.addEventListener('input', (() => {
+                        let attrVal = node.getAttribute('v-model');
+                        this._binding[attrVal]._directives.push(new Watcher(
+                            'input',
+                            node,
+                            this,
+                            attrVal,
+                            'value'
+                        ))
+                        return () => {
+                            this.$data[attrVal] = node.value;
+                        }
+                    })())
+                }
+                else if (node.hasAttribute('v-bind')) {
+                    var attrVal = node.getAttribute('v-bind');
+                    this._binding[attrVal]._directives.push(new Watcher(
+                        'text',
+                        node,
+                        this,
+                        attrVal,
+                        'innerHTML'
+                    ))
+                }
+
+            }
+
+        }
+
+
+    }
+
+    class Watcher {
+        constructor(name, el, vm, exp, attr) {
+            this.name = name;         //指令名称，例如文本节点，该值设为"text"
+            this.el = el;             //指令对应的DOM元素
+            this.vm = vm;             //指令所属myVue实例
+            this.exp = exp;           //指令对应的值，本例如"number"
+            this.attr = attr;         //绑定的属性值，本例为"innerHTML"
+
+            this.update();
+        }
+        update() {
+            this.el[this.attr] = this.vm.$data[this.exp]
+        }
+    }
+
+    window.onload = function () {
+        app = new Vue({
+            el: '#app',
+            data: {
+                number: 0,
+                count: 0,
+                demo: 0,
+            },
+            methods: {
+                increment: function () {
+                    this.number++;
+                },
+                incre: function () {
+                    this.count++;
+                },
+                test: function () {
+                    this.demo += 100;
+                },
+            }
+        })
+    }
+
+
+
+
+</script>
+
+</html>
