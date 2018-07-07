@@ -40,7 +40,7 @@
             this.$el = document.querySelector(options.el)
             this.$data = options.data
             this.$methods = options.methods
-            this._binding = {};
+            this._binding = {};//收集模板内绑定了指令的节点（node），即一个变量对应哪些节点，通常是一对多，因此采用数组存放
 
             this._observe(this.$data)
             this._complie(this.$el)
@@ -123,8 +123,8 @@
             this.name = name;         //指令名称，例如文本节点，该值设为"text"
             this.el = el;             //指令对应的DOM元素
             this.vm = vm;             //指令所属myVue实例
-            this.exp = exp;           //指令对应的值，本例如"number"
-            this.attr = attr;         //绑定的属性值，本例为"innerHTML"
+            this.exp = exp;           //指令对应的data内的key，本例如"number"
+            this.attr = attr;         //绑定的属性值，普通文本为"innerHTML"，input为value
 
             this.update();
         }
