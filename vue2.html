@@ -40,7 +40,7 @@
             this.$el = document.querySelector(options.el)
             this.$data = options.data
             this.$methods = options.methods
-            this._binding = {};//收集模板内绑定了指令的节点（node），即一个变量对应哪些节点，通常是一对多，因此采用数组存放
+            this.dep = {};//依赖收集 收集模板内绑定了指令的节点（node），即一个变量对应哪些节点，通常是一对多，因此采用数组存放
 
             this._observe(this.$data)
             this._complie(this.$el)
@@ -48,13 +48,11 @@
         _observe(obj) {
             let arr = Object.keys(obj)
             for (const key of arr) {
-                this._binding[key] = {
-                    _directives: []
-                };
+                this.dep[key] = []
                 let value = obj[key]
                 // 先只考虑object 不考虑数组
                 typeof value === 'object' ? this._observe(value) : ''
-                let binding = this._binding[key];
+                let binding = this.dep[key];
 
                 Object.defineProperty(this.$data, key, {
                     enumerable: true,
@@ -65,7 +63,7 @@
                     set: function (newValue) {
                         if (newValue !== value) {
                             value = newValue
-                            binding._directives.forEach(function (item) {
+                            binding.forEach(function (item) {
                                 item.update();
                             })
                         }
@@ -88,7 +86,7 @@
                 else if (node.hasAttribute('v-model') && (node.tagName === 'INPUT' || node.tagName == 'TEXTAREA')) {
                     node.addEventListener('input', (() => {
                         let attrVal = node.getAttribute('v-model');
-                        this._binding[attrVal]._directives.push(new Watcher(
+                        this.dep[attrVal].push(new Watcher(
                             'input',
                             node,
                             this,
@@ -102,7 +100,7 @@
                 }
                 else if (node.hasAttribute('v-bind')) {
                     var attrVal = node.getAttribute('v-bind');
-                    this._binding[attrVal]._directives.push(new Watcher(
+                    this.dep[attrVal].push(new Watcher(
                         'text',
                         node,
                         this,

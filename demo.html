@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <form>
+            <input type="text" v-model="number">
+            <button type="button" v-click="increment">增加</button>
+        </form>
+        <h3 v-bind="number"></h3>
+
+        <form>
+            <input type="text" v-model="count">
+            <button type="button" v-click="incre">增加</button>
+        </form>
+        <h3 v-bind="count"></h3>
+
+
+        <h3 v-bind="demo"></h3>
+
+        <div v-click="test">点击</div>
+
+    </div>
+</body>
+<script>
+    class Vue {
+        constructor(options) {
+            this._init(options)
+        }
+        _init(options) {
+            this.$el = document.querySelector(options.el)
+            this.$data = options.data
+            this.$methods = options.methods
+            this.dep = {}
+        }
+        _observer(obj) {
+            let keys = Object.keys(obj)
+            for (const key of keys) {
+                let value = obj[key]
+                this.dep[key] = []
+                let dep = this.dep[key]
+                Object.prototype.toString.call(value) === 'objetc Object' ? this._observer(value) : ''
+                Object.defineProperty(this.$data, key, {
+                    get: function () {
+                        return value
+
+                    },
+                    set: function (newValue) {
+                        if (value !== newValue) {
+                            for (const item of dep) {
+                                item.update()
+                            }
+                        }
+                    },
+                })
+
+            }
+        }
+        _complie(root) {
+            let nodes = root.childern
+            for (const node of nodes) {
+                node.childern.length ? this._complie(node) : ''
+                if (node.hasAttribute('v-click')) {
+                    node.onclick = (() => {
+                        let method = node.getAttribute('v-click')
+                        this.$methods[method].bind(this.$data)
+                    })()
+                }
+                else if (node.hasAttribute('v-model') && (node.tagName === 'INPUT' || node.tagName == 'TEXTAREA')) {
+                    node.addEventListener
+                }
+            }
+        }
+    }
+
+    window.onload = function () {
+        app = new Vue({
+            el: '#app',
+            data: {
+                number: 0,
+                count: 0,
+                demo: 0,
+            },
+            methods: {
+                increment: function () {
+                    this.number++;
+                },
+                incre: function () {
+                    this.count++;
+                },
+                test: function () {
+                    this.demo += 100;
+                },
+            }
+        })
+    }
+
+
+
+
+</script>
+
+</html>
